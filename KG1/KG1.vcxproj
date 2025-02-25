@@ -19,16 +19,39 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MySuper3DApp.cpp" />
+    <ClCompile Include="Debug\DXDebug.cpp" />
+    <ClCompile Include="Game\DisplayWin32.cpp" />
+    <ClCompile Include="Game\main.cpp" />
+    <ClCompile Include="Game\GameComponent.cpp" />
+    <ClCompile Include="Game\InputDevice.cpp" />
+    <ClCompile Include="MySuper3DApp.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Game\Game.cpp" />
+    <ClCompile Include="Game\TriangleComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\MyVeryFirstShader.hlsl">
+    <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </EntryPointName>
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </EntryPointName>
       <FileType>Document</FileType>
-    </None>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game\ConstantBuffer.h" />
+    <ClInclude Include="Debug\DXDebug.h" />
+    <ClInclude Include="Game\ConstantBufferTypes.h" />
+    <ClInclude Include="Game\DisplayWin32.h" />
+    <ClInclude Include="Game\GameComponent.h" />
+    <ClInclude Include="Game\InputDevice.h" />
+    <ClInclude Include="Support\DXInclude.h" />
+    <ClInclude Include="Game\Game.h" />
+    <ClInclude Include="Game\TriangleComponent.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
