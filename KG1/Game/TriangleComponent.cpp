@@ -1,33 +1,90 @@
 #include "TriangleComponent.h"
 
-bool TriangleComponent::Init(HWND hWnd, 
-    Microsoft::WRL::ComPtr<ID3D11Device>& dev, 
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext, 
-    std::shared_ptr<ConstantBuffer<ConstBuffVertexshader>> constBuffVS, 
-    std::vector<DirectX::XMFLOAT4> points, 
-    std::vector<int> indexes)
+TriangleComponent::TriangleComponent(Microsoft::WRL::ComPtr<ID3D11Device>& dev, 
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext)
 {
-    window = hWnd;
     device = dev;
-    context = dContext;
-    renderPoints = points;
-    this->indexes = indexes;
+    deviceContext = dContext;
+}
+
+
+bool TriangleComponent::Init(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext)
+{
 
     if (!CompileShader())
         return false;
 
-
     if (!CreateVPBuffer())
         return false;
 
-    constBuffVertexshader = constBuffVS;
-    constBuffVertexshader->Initialize(device, context);
-    constBuffVertexshader->data.offset = offset;
-    constBuffVertexshader->ApplyChanges();
+    constBuff.Initialize(device, deviceContext);
+
+    // RASTERIZER
+    CD3D11_RASTERIZER_DESC rastDesc = {};
+    rastDesc.CullMode = D3D11_CULL_NONE;
+    rastDesc.FillMode = D3D11_FILL_SOLID;
+
+    auto res = device->CreateRasterizerState(&rastDesc, &rastState);
+
+    if (FAILED(res))
+        return false;
 
     return true;
 }
 
+bool TriangleComponent::Draw()
+{
+    deviceContext->RSSetState(rastState);
+
+    deviceContext->IASetInputLayout(layout);
+    deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    deviceContext->IASetIndexBuffer(indBuff, DXGI_FORMAT_R32_UINT, 0);
+    deviceContext->IASetVertexBuffers(0, 1, &vertBuff, strides, offsets);
+
+    deviceContext->VSSetShader(vertexShader, nullptr, 0);
+    deviceContext->PSSetShader(pixelShader, nullptr, 0);
+
+    deviceContext->VSSetConstantBuffers(0, 1, constBuff.GetAddressOf());
+    //ConstBuffVertexshader data;
+    //data.offset = DirectX::XMFLOAT4(positionX, positionY, 0.0f, 0.0f);
+    //data.color = color;
+    //constBuff.data.offset = data.offset;
+    //constBuff.data.color = data.color;
+    //constBuff.ApplyChanges();
+
+    deviceContext->DrawIndexed(6, 0, 0);
+
+    return true;
+}
+
+//bool TriangleComponent::Init(HWND hWnd, 
+//    Microsoft::WRL::ComPtr<ID3D11Device>& dev, 
+//    Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext, 
+//    std::shared_ptr<ConstantBuffer<ConstBuffVertexshader>> constBuffVS, 
+//    std::vector<DirectX::XMFLOAT4> points, 
+//    std::vector<int> indexes)
+//{
+//    window = hWnd;
+//    device = dev;
+//    context = dContext;
+//    renderPoints = points;
+//    this->indexes = indexes;
+//
+//    if (!CompileShader())
+//        return false;
+//
+//
+//    if (!CreateVPBuffer())
+//        return false;
+//
+//    constBuffVertexshader = constBuffVS;
+//    constBuffVertexshader->Initialize(device, context);
+//    constBuffVertexshader->data.offset = offset;
+//    constBuffVertexshader->ApplyChanges();
+//
+//    return true;
+//}
+//
 bool TriangleComponent::CompileShader()
 {
     vertexShaderByteCode = nullptr;
@@ -44,19 +101,19 @@ bool TriangleComponent::CompileShader()
         &errorVertexCode
     );
 
-    if (FAILED(res)) {
-        if (errorVertexCode) {
-            char* compileErrors = (char*)(errorVertexCode->GetBufferPointer());
+    //if (FAILED(res)) {
+    //    if (errorVertexCode) {
+    //        char* compileErrors = (char*)(errorVertexCode->GetBufferPointer());
 
-            std::cout << compileErrors << std::endl;
-        }
-        else
-        {
-            MessageBox(window, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
-        }
+    //        std::cout << compileErrors << std::endl;
+    //    }
+    //    else
+    //    {
+    //        MessageBox(window, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
 
     D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
@@ -158,63 +215,69 @@ bool TriangleComponent::CreateVPBuffer()
     if (FAILED(res))
         return false;
 
-
-    // RASTERIZER
-    CD3D11_RASTERIZER_DESC rastDesc = {};
-    rastDesc.CullMode = D3D11_CULL_NONE;
-    rastDesc.FillMode = D3D11_FILL_SOLID;
-
-    res = device->CreateRasterizerState(&rastDesc, &rastState);
-
-    if (FAILED(res))
-        return false;
-
     return true;
 }
 
-bool TriangleComponent::Draw()
+void TriangleComponent::SetPosition(float x, float y)
 {
-    context->RSSetState(rastState);
+    positionX = x;
+    positionY = y;
 
-    context->IASetInputLayout(layout);
-    context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context->IASetIndexBuffer(indBuff, DXGI_FORMAT_R32_UINT, 0);
-    context->IASetVertexBuffers(0, 1, &vertBuff, strides, offsets);
-
-    context->VSSetShader(vertexShader, nullptr, 0);
-    context->PSSetShader(pixelShader, nullptr, 0);
-
-    return true;
+    offset.x = positionX;
+    offset.y = positionY;
+    constBuff.data.offset = offset;
+    constBuff.ApplyChanges();
 }
 
-void TriangleComponent::ClearData()
+void TriangleComponent::SetColor(float r, float g, float b, float a)
 {
-    renderPoints.clear();
-    indexes.clear();
-
-    if(layout)
-        layout->Release();
-    if(rastState)
-        rastState->Release();
-    if(indBuff)
-        indBuff->Release();
-    if(vertBuff)
-        vertBuff->Release();
-    if(vertexShader)
-        vertexShader->Release();
-    if(pixelShader)
-        pixelShader->Release();
+    color = DirectX::XMFLOAT4( r, g, b, a );
 }
 
+//
+//bool TriangleComponent::Draw()
+//{
+//    context->RSSetState(rastState);
+//
+//    context->IASetInputLayout(layout);
+//    context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//    context->IASetIndexBuffer(indBuff, DXGI_FORMAT_R32_UINT, 0);
+//    context->IASetVertexBuffers(0, 1, &vertBuff, strides, offsets);
+//
+//    context->VSSetShader(vertexShader, nullptr, 0);
+//    context->PSSetShader(pixelShader, nullptr, 0);
+//
+//    return true;
+//}
+//
+//void TriangleComponent::ClearData()
+//{
+//    renderPoints.clear();
+//    indexes.clear();
+//
+//    if(layout)
+//        layout->Release();
+//    if(rastState)
+//        rastState->Release();
+//    if(indBuff)
+//        indBuff->Release();
+//    if(vertBuff)
+//        vertBuff->Release();
+//    if(vertexShader)
+//        vertexShader->Release();
+//    if(pixelShader)
+//        pixelShader->Release();
+//}
+//
 void TriangleComponent::UpdateOffset(float x, float y)
 {
     offset.x += x;
     offset.y += y;
 
-    if (constBuffVertexshader->Get())
+    if (constBuff.Get())
     {
-        constBuffVertexshader->data.offset = offset;
-        constBuffVertexshader->ApplyChanges();
-        context->VSSetConstantBuffers(0, 1, constBuffVertexshader->GetAddressOf());
+        constBuff.data.offset = offset;
+        constBuff.ApplyChanges();
+        deviceContext->VSSetConstantBuffers(0, 1, constBuff.GetAddressOf());
     }
 }

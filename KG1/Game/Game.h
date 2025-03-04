@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameComponent.h"
+#include "TriangleComponent.h"
 #include "../Support/DXInclude.h"
 #include "DisplayWin32.h"
 #include "InputDevice.h"
@@ -18,9 +18,9 @@ public:
     void Run();
     void Shutdown();
     void Update();
-    void UpdateInternal();
     void Draw();
     void MessageHandler();
+    void AddGameComponent(TriangleComponent* component);
 
     inline Microsoft::WRL::ComPtr<ID3D11Device>& GetDevice()
     {
@@ -64,7 +64,7 @@ private:
     ID3D11Texture2D* backTex = nullptr;
     ID3D11RenderTargetView* rtv = nullptr;
 
-    GameComponent gameComponent = GameComponent();
+    std::vector<TriangleComponent*> components;
 
     MSG msg = {};
     std::chrono::time_point<std::chrono::steady_clock> prevTime{};

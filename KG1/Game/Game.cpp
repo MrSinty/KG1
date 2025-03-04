@@ -12,19 +12,20 @@ bool Game::Init(LPCWSTR appName, int width, int height)
     if (!CreateRTV())
         return false;
 
-    std::vector<points_indexes> data;
-    data.push_back({
-    {
+    std::vector <DirectX::XMFLOAT4> points = { 
         DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
         DirectX::XMFLOAT4(-0.5f, -0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
-        DirectX::XMFLOAT4(0.5f, -0.5f, 0.5f, 1.0f),	DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),
-        DirectX::XMFLOAT4(-0.5f, 0.5f, 0.5f, 1.0f),	DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),
-    },
-    { 0,1,2, 1,0,3 }
-    });
+        DirectX::XMFLOAT4(0.5f, -0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),
+        DirectX::XMFLOAT4(-0.5f, 0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) 
+    };
 
-    if (!gameComponent.Init(display->GetWindow(), device, context, data))
-        return false;
+    std::vector<int> indexes = { 0,1,2, 1,0,3 };
+
+
+
+
+    //if (!gameComponent.Init(display->GetWindow(), device, context, data))
+    //    return false;
 
 #ifdef _DEBUG
     DXDebug::Get().Init(device);
@@ -111,11 +112,13 @@ void Game::Draw()
 
     context->OMSetRenderTargets(1, &rtv, nullptr);
 
-    gameComponent.Draw();
-    
     context->ClearRenderTargetView(rtv, color);
 
-    context->DrawIndexed(6, 0, 0);
+    for (auto component : components)
+    {
+        if (!component->Draw())
+            return;
+    }
 
     context->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -154,7 +157,6 @@ bool Game::CreateSwapChain()
     swapDesc.SampleDesc.Count = 1;
     swapDesc.SampleDesc.Quality = 0;
 
-
     UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 #ifdef _DEBUG
     creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -178,11 +180,16 @@ bool Game::CreateSwapChain()
     if (FAILED(res))
         return false;
 
-    res = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backTex);	// __uuidof(ID3D11Texture2D)
+    res = swapChain->GetBuffer(0, IID_PPV_ARGS(&backTex));
     if (FAILED(res))
         return false;
 
     return true;
+}
+
+void Game::AddGameComponent(TriangleComponent* component)
+{
+    components.push_back(component);
 }
 
 void Game::MessageHandler()
@@ -200,16 +207,32 @@ void Game::MessageHandler()
         switch (msg.wParam)
         {
         case VK_LEFT:
-            gameComponent.UpdateTriangleOffset(-0.1f, 0.0f);
+            for (auto component : components)
+            {
+                component->UpdateOffset(-0.1f, 0.0f);
+                break;
+            }
             break;
         case VK_RIGHT:
-            gameComponent.UpdateTriangleOffset(0.1f, 0.0f);
+            for (auto component : components)
+            {
+                component->UpdateOffset(0.1f, 0.0f);
+                break;
+            }
             break;
         case VK_UP:
-            gameComponent.UpdateTriangleOffset(0.0f, 0.1f);
+            for (auto component : components)
+            {
+                component->UpdateOffset(0.0f, 0.1f);
+                break;
+            }
             break;
         case VK_DOWN:
-            gameComponent.UpdateTriangleOffset(0.0f, -0.1f);
+            for (auto component : components)
+            {
+                component->UpdateOffset(0.0f, -0.1f);
+                break;
+            }
             break;
         }
         break;
