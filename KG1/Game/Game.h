@@ -1,10 +1,12 @@
 #pragma once
 
-#include "TriangleComponent.h"
+#include "Components/TriangleComponent.h"
+#include "Platform.h"
+#include "Ball.h"
 #include "../Support/DXInclude.h"
-#include "DisplayWin32.h"
-#include "InputDevice.h"
-#include "../Debug/DXDebug.h"
+#include "WinDisplay/DisplayWin32.h"
+#include "Input/InputDevice.h"
+#include "../DXDebug/DXDebug.h"
 
 #include <windowsx.h>
 #include <iostream>
@@ -20,7 +22,9 @@ public:
     void Update();
     void Draw();
     void MessageHandler();
-    void AddGameComponent(TriangleComponent* component);
+    void AddPlatform(Platform* platformObj);
+    void AddBall(Ball* ballObj);
+    void NewRound(bool isRightWin);
 
     inline Microsoft::WRL::ComPtr<ID3D11Device>& GetDevice()
     {
@@ -64,7 +68,16 @@ private:
     ID3D11Texture2D* backTex = nullptr;
     ID3D11RenderTargetView* rtv = nullptr;
 
-    std::vector<TriangleComponent*> components;
+    std::vector<Platform*> platforms;
+    Platform* platformLeft = nullptr;
+    Platform* platformRight = nullptr;
+    Platform* wallUp = nullptr;
+    Platform* wallDown = nullptr;
+    std::vector<Platform*> walls;
+    std::vector<Ball*> balls;
+
+    int scoreLeft = 0;
+    int scoreRight = 0;
 
     MSG msg = {};
     std::chrono::time_point<std::chrono::steady_clock> prevTime{};

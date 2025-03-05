@@ -1,4 +1,8 @@
-//#include "GameComponent.h"
+#include "GameComponent.h"
+
+
+
+
 //
 //bool GameComponent::Init(HWND hWnd, Microsoft::WRL::ComPtr<ID3D11Device>& dev, 
 //    Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext, 

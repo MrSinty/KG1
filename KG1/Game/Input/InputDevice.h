@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Support/DXInclude.h"
-#include "Game.h"
+#include "../../Support/DXInclude.h"
+#include "../Game.h"
 
 #include <unordered_map>
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "../Support/DXInclude.h"
+#include "../../Support/DXInclude.h"
 #include <iostream>
 
 class DisplayWin32

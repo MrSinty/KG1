@@ -8,9 +8,14 @@ TriangleComponent::TriangleComponent(Microsoft::WRL::ComPtr<ID3D11Device>& dev,
 }
 
 
-bool TriangleComponent::Init(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext)
+TriangleComponent::~TriangleComponent()
 {
+    ClearData();
+}
 
+bool TriangleComponent::Init()
+{
+    // TODO: make rectangle vertex calculation from center point and width/height
     if (!CompileShader())
         return false;
 
@@ -45,46 +50,23 @@ bool TriangleComponent::Draw()
     deviceContext->PSSetShader(pixelShader, nullptr, 0);
 
     deviceContext->VSSetConstantBuffers(0, 1, constBuff.GetAddressOf());
-    //ConstBuffVertexshader data;
-    //data.offset = DirectX::XMFLOAT4(positionX, positionY, 0.0f, 0.0f);
-    //data.color = color;
-    //constBuff.data.offset = data.offset;
-    //constBuff.data.color = data.color;
-    //constBuff.ApplyChanges();
 
-    deviceContext->DrawIndexed(6, 0, 0);
+    deviceContext->DrawIndexed(indices.size(), 0, 0);
 
     return true;
 }
 
-//bool TriangleComponent::Init(HWND hWnd, 
-//    Microsoft::WRL::ComPtr<ID3D11Device>& dev, 
-//    Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext, 
-//    std::shared_ptr<ConstantBuffer<ConstBuffVertexshader>> constBuffVS, 
-//    std::vector<DirectX::XMFLOAT4> points, 
-//    std::vector<int> indexes)
-//{
-//    window = hWnd;
-//    device = dev;
-//    context = dContext;
-//    renderPoints = points;
-//    this->indexes = indexes;
-//
-//    if (!CompileShader())
-//        return false;
-//
-//
-//    if (!CreateVPBuffer())
-//        return false;
-//
-//    constBuffVertexshader = constBuffVS;
-//    constBuffVertexshader->Initialize(device, context);
-//    constBuffVertexshader->data.offset = offset;
-//    constBuffVertexshader->ApplyChanges();
-//
-//    return true;
-//}
-//
+void TriangleComponent::Update()
+{
+    if (constBuff.Get())
+    {
+        constBuff.data.offset = offset;
+        constBuff.data.color = color;
+        constBuff.data.scale = scale;
+        constBuff.ApplyChanges();
+    }
+}
+
 bool TriangleComponent::CompileShader()
 {
     vertexShaderByteCode = nullptr;
@@ -203,10 +185,10 @@ bool TriangleComponent::CreateVPBuffer()
     indexBufDesc.CPUAccessFlags = 0;
     indexBufDesc.MiscFlags = 0;
     indexBufDesc.StructureByteStride = 0;
-    indexBufDesc.ByteWidth = sizeof(indexes.front()) * std::size(indexes);
+    indexBufDesc.ByteWidth = sizeof(indices.front()) * std::size(indices);
 
     D3D11_SUBRESOURCE_DATA indexData = {};
-    indexData.pSysMem = &indexes.front();
+    indexData.pSysMem = &indices.front();
     indexData.SysMemPitch = 0;
     indexData.SysMemSlicePitch = 0;
 
@@ -218,66 +200,82 @@ bool TriangleComponent::CreateVPBuffer()
     return true;
 }
 
-void TriangleComponent::SetPosition(float x, float y)
+void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float hheight)
 {
-    positionX = x;
-    positionY = y;
+    centerPoint = center;
+    width = wwidth;
+    height = hheight;
 
-    offset.x = positionX;
-    offset.y = positionY;
-    constBuff.data.offset = offset;
-    constBuff.ApplyChanges();
+    renderPoints[0].x = centerPoint.x - width / 2;
+    renderPoints[0].y = centerPoint.y + height / 2;
+
+    renderPoints[2].x = centerPoint.x + width / 2;
+    renderPoints[2].y = centerPoint.y - height / 2;
+
+    renderPoints[4].x = centerPoint.x - width / 2;
+    renderPoints[4].y = centerPoint.y - height / 2;
+
+    renderPoints[6].x = centerPoint.x + width / 2;
+    renderPoints[6].y = centerPoint.y + height / 2;
+}
+
+void TriangleComponent::SetVertexCoordinates(std::vector<Vector2>& points)
+{
+    for (int i = 0; i < renderPoints.size(); i += 2)
+    {
+        renderPoints[i].x = points[i / 2].x;
+        renderPoints[i].y = points[i / 2].y;
+    }
+}
+
+void TriangleComponent::SetOffset(float x, float y)
+{
+    offset.x = x;
+    offset.y = y;
 }
 
 void TriangleComponent::SetColor(float r, float g, float b, float a)
 {
-    color = DirectX::XMFLOAT4( r, g, b, a );
+    color = Vector4( r, g, b, a );
 }
 
-//
-//bool TriangleComponent::Draw()
-//{
-//    context->RSSetState(rastState);
-//
-//    context->IASetInputLayout(layout);
-//    context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//    context->IASetIndexBuffer(indBuff, DXGI_FORMAT_R32_UINT, 0);
-//    context->IASetVertexBuffers(0, 1, &vertBuff, strides, offsets);
-//
-//    context->VSSetShader(vertexShader, nullptr, 0);
-//    context->PSSetShader(pixelShader, nullptr, 0);
-//
-//    return true;
-//}
-//
-//void TriangleComponent::ClearData()
-//{
-//    renderPoints.clear();
-//    indexes.clear();
-//
-//    if(layout)
-//        layout->Release();
-//    if(rastState)
-//        rastState->Release();
-//    if(indBuff)
-//        indBuff->Release();
-//    if(vertBuff)
-//        vertBuff->Release();
-//    if(vertexShader)
-//        vertexShader->Release();
-//    if(pixelShader)
-//        pixelShader->Release();
-//}
-//
+void TriangleComponent::SetScale(float sscale)
+{
+    scale = sscale;
+}
+
 void TriangleComponent::UpdateOffset(float x, float y)
 {
     offset.x += x;
     offset.y += y;
-
-    if (constBuff.Get())
-    {
-        constBuff.data.offset = offset;
-        constBuff.ApplyChanges();
-        deviceContext->VSSetConstantBuffers(0, 1, constBuff.GetAddressOf());
-    }
 }
+
+Vector4 TriangleComponent::GetLocationAndForm()
+{
+    Vector4 vec;
+    vec.x = centerPoint.x;
+    vec.y = centerPoint.y;
+    vec.z = width;
+    vec.w = height;
+    return vec;
+}
+
+void TriangleComponent::ClearData()
+{
+    renderPoints.clear();
+    indices.clear();
+
+    if (layout)
+        layout->Release();
+    if (rastState)
+        rastState->Release();
+    if (indBuff)
+        indBuff->Release();
+    if (vertBuff)
+        vertBuff->Release();
+    if (vertexShader)
+        vertexShader->Release();
+    if (pixelShader)
+        pixelShader->Release();
+}
+

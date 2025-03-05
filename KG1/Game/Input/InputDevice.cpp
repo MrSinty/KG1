@@ -4,13 +4,14 @@
 void InputDevice::OnKeyDown(WPARAM key)
 {
     keyStates[key] = true;
-    std::cout << "Key Down: " << key << std::endl;
+    //std::cout << "Key Down: " << key << std::endl;
+
 }
 
 void InputDevice::OnKeyUp(WPARAM key)
 {
     keyStates[key] = false;
-    std::cout << "Key Up: " << key << std::endl;
+    //std::cout << "Key Up: " << key << std::endl;
 }
 
 bool InputDevice::IsKeyDown(WPARAM key) const

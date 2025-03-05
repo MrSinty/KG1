@@ -1,8 +1,8 @@
 #include "Game.h"
-#include "GameComponent.h"
-#include "TriangleComponent.h"
-
-#include "../Debug/DXDebug.h"
+#include "Components/TriangleComponent.h"
+#include "Platform.h"
+#include "Ball.h"
+#include "../DXDebug/DXDebug.h"
 
 
 int main()
@@ -10,17 +10,14 @@ int main()
 
     if (Game::Get().Init(L"3DAPP", 800, 800))
     {
-        Game::Get().Run();
-        auto triangle1 = new TriangleComponent(Game::Get().GetDevice(), Game::Get().GetDeviceContext());
-        triangle1->Init(Game::Get().GetDevice(), Game::Get().GetDeviceContext());
-        triangle1->SetPosition(-0.5f, 0.5f);
+        Game::Get().Run(); // { 0,1,2, 1,0,3 }
 
-        auto triangle2 = new TriangleComponent(Game::Get().GetDevice(), Game::Get().GetDeviceContext());
-        triangle2->Init(Game::Get().GetDevice(), Game::Get().GetDeviceContext());
-        triangle2->SetPosition(0.5f, -0.5f);
-
-        Game::Get().AddGameComponent(triangle1);
-        Game::Get().AddGameComponent(triangle2);
+        //std::vector<Vector2> vec2{
+        //    Vector2 { -1.0f, 1.0f, },
+        //    Vector2 { -0.9f, 0.5f, },
+        //    Vector2 { -1.0f, 0.5f, },
+        //    Vector2 { -0.9f, 1.0f, }
+        //};
 
         while (!Game::Get().GetShouldClose())
         {
@@ -30,6 +27,7 @@ int main()
         }
 
         Game::Get().Shutdown();
+
     }
 
 }

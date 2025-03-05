@@ -12,25 +12,29 @@ bool Game::Init(LPCWSTR appName, int width, int height)
     if (!CreateRTV())
         return false;
 
-    std::vector <DirectX::XMFLOAT4> points = { 
-        DirectX::XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
-        DirectX::XMFLOAT4(-0.5f, -0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f),
-        DirectX::XMFLOAT4(0.5f, -0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),
-        DirectX::XMFLOAT4(-0.5f, 0.5f, 0.5f, 1.0f), DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) 
-    };
-
-    std::vector<int> indexes = { 0,1,2, 1,0,3 };
-
-
-
-
-    //if (!gameComponent.Init(display->GetWindow(), device, context, data))
-    //    return false;
-
 #ifdef _DEBUG
     DXDebug::Get().Init(device);
 #endif // _DEBUG
 
+    auto ball = new Ball(device, context);
+    ball->Init(0.f, 0.f, 0.1f, 0.1f);
+
+    AddBall(ball);
+
+    platformRight = new Platform(device, context);
+    platformRight->Init(0.9f, 0.f, 0.1f, 0.5f);
+
+    platformLeft = new Platform(device, context);
+    platformLeft->Init(-0.9f, 0.0f, 0.1f, 0.5f);
+
+    wallUp = new Platform(device, context);
+    wallUp->Init(0.0f, 0.95f, 2.0f, 0.1f);
+
+    wallDown = new Platform(device, context);
+    wallDown->Init(0.0f, -0.95f, 2.0f, 0.1f);
+
+    walls.push_back(wallUp);
+    walls.push_back(wallDown);
 
     return true;
 }
@@ -94,11 +98,76 @@ void Game::Update()
 
         frameCount = 0;
     }
+
+    for (auto ball : balls)
+    {
+        DirectX::BoundingBox col = platformLeft->GetCollider();
+        if (ball->CheckCollision(col))
+        {
+            ball->isColliding = true;
+
+            if (!ball->wasColliding)
+            {
+                ball->ChangeDirectionAfterPlatform(col.Center, false);
+            }
+
+            ball->wasColliding = true;
+        }
+
+        platformLeft->Update();
+
+
+        col = platformRight->GetCollider();
+        if (ball->CheckCollision(col))
+        {
+            ball->isColliding = true;
+
+            if (!ball->wasColliding)
+            {
+                ball->ChangeDirectionAfterPlatform(col.Center, true);
+            }
+
+            ball->wasColliding = true;
+        }
+
+        platformRight->Update();
+
+
+        for (auto wall : walls)
+        {
+            col = wall->GetCollider();
+            if (ball->CheckCollision(col))
+            {
+                ball->isColliding = true;
+
+                if (!ball->wasColliding)
+                {
+                    ball->ChangeDirectionAfterWall();
+                }
+
+                ball->wasColliding = true;
+            }
+
+            wall->Update();
+        }
+
+        if (ball->GetCollider().Center.x < -1.f)
+        {
+            NewRound(false);
+        }
+
+        if (ball->GetCollider().Center.x > 1.f)
+        {
+            NewRound(true);
+        }
+
+        ball->Update(deltaTime);
+    }
 }
 
 void Game::Draw()
 {
-    float color[] = { totalTime, 0.1f, 0.1f, 1.0f };
+    float color[] = { 0.1f, 0.1f, 0.1f, 1.0f };
 
     D3D11_VIEWPORT viewport = {};
     viewport.Width = static_cast<float>(screenWidth);
@@ -114,9 +183,20 @@ void Game::Draw()
 
     context->ClearRenderTargetView(rtv, color);
 
-    for (auto component : components)
+    if (!platformLeft->Draw())
+        return;
+    if (!platformRight->Draw())
+        return;
+
+    for (auto wall : walls)
     {
-        if (!component->Draw())
+        if (!wall->Draw())
+            return;
+    }
+
+    for (auto ball : balls)
+    {
+        if (!ball->Draw())
             return;
     }
 
@@ -187,9 +267,28 @@ bool Game::CreateSwapChain()
     return true;
 }
 
-void Game::AddGameComponent(TriangleComponent* component)
+void Game::AddPlatform(Platform* platformObj)
 {
-    components.push_back(component);
+    platforms.push_back(platformObj);
+}
+
+void Game::AddBall(Ball* ballObj)
+{
+    balls.push_back(ballObj);
+}
+
+void Game::NewRound(bool isRightWin)
+{
+    if (isRightWin)
+    {
+        scoreRight++;
+        std::cout << "Right WON!\n" << "The score is:\n" << "Left: " << scoreLeft << " Right: " << scoreRight << std::endl;
+    }
+    else
+    {   
+        scoreLeft++;
+        std::cout << "Left WON!\n" << "The score is:\n" << "Left: " << scoreLeft << " Right: " << scoreRight << std::endl;
+    }
 }
 
 void Game::MessageHandler()
@@ -199,45 +298,44 @@ void Game::MessageHandler()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
     switch (msg.message)
     {
-    case WM_KEYDOWN:
+    case WM_CHAR:
         InputDevice::Get().OnKeyDown(msg.wParam);
 
         switch (msg.wParam)
         {
+        case 119: // W key
+            platformLeft->UpdateOffset(0.0f, 0.05f);
+            break;
+        case 115: // S key
+            platformLeft->UpdateOffset(0.0f, -0.05f);
+            break;
+        }
+
+
+    case WM_KEYDOWN:
+        InputDevice::Get().OnKeyDown(msg.wParam);
+      
+        switch (msg.wParam)
+        {
+            break;
         case VK_LEFT:
-            for (auto component : components)
-            {
-                component->UpdateOffset(-0.1f, 0.0f);
-                break;
-            }
             break;
         case VK_RIGHT:
-            for (auto component : components)
-            {
-                component->UpdateOffset(0.1f, 0.0f);
-                break;
-            }
             break;
         case VK_UP:
-            for (auto component : components)
-            {
-                component->UpdateOffset(0.0f, 0.1f);
-                break;
-            }
+            platformRight->UpdateOffset(0.0f, 0.05f);
             break;
         case VK_DOWN:
-            for (auto component : components)
-            {
-                component->UpdateOffset(0.0f, -0.1f);
-                break;
-            }
+            platformRight->UpdateOffset(0.0f, -0.05f);
             break;
         }
         break;
     case WM_KEYUP:
         InputDevice::Get().OnKeyUp(msg.wParam);
+
         break;
     case WM_MOUSEMOVE:
         InputDevice::Get().OnMouseMove(GET_X_LPARAM(msg.lParam), GET_Y_LPARAM(msg.lParam));

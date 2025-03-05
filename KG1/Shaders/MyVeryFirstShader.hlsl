@@ -2,6 +2,7 @@ struct ConstantData
 {
     float4 offset;
     float4 color;
+    float scale;
 };
 
 cbuffer ConstBuff : register(b0) {
@@ -24,7 +25,8 @@ PS_IN VSMain(VS_IN input, uint vId : SV_VertexID)
 {
     PS_IN output = (PS_IN) 0;
 	
-    output.pos = float4(input.pos.xyz + ConstData.offset.xyz, 1.0f);
+    float4 scaledPos = input.pos * ConstData.scale;
+    output.pos = float4(scaledPos.xyz + ConstData.offset.xyz, 1.0f);
     output.color = input.color + ConstData.color;
 	
     return output;
