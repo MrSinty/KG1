@@ -20,8 +20,14 @@ void Platform::Init(float startX, float startY, float wwidth, float hheight)
     collider.Extents = { width, height, 0.0f };
 }
 
-void Platform::Update()
+void Platform::Update(float deltaTime)
 {
+    if (isKeyDown)
+    {
+        Vector2 offset = direction * speed * deltaTime;
+        UpdateOffset(offset.x, offset.y);
+    }
+
     mesh->Update();
 }
 
@@ -35,4 +41,25 @@ void Platform::UpdateOffset(float x, float y)
     collider.Center.x += x;
     collider.Center.y += y;
     mesh->UpdateOffset(x, y);
+}
+
+void Platform::KeyDown(bool isDown)
+{
+    if (isDown)
+        isKeyDown = true;
+    else
+        isKeyDown = false;
+}
+
+void Platform::IsUpKey(bool isUp)
+{
+    if (isKeyDown)
+    {
+        if (isUp)
+            direction = { 0.0f, 1.0f };
+        else
+            direction = { 0.0f, -1.0f };
+    }
+    else
+        direction = { 0.f, 0.f };
 }

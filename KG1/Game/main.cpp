@@ -12,7 +12,7 @@ int main()
     {
         Game::Get().Run(); // { 0,1,2, 1,0,3 }
 
-        //std::vector<Vector2> vec2{
+        //std::vector<Vector2> vec{
         //    Vector2 { -1.0f, 1.0f, },
         //    Vector2 { -0.9f, 0.5f, },
         //    Vector2 { -1.0f, 0.5f, },

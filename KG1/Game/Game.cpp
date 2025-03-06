@@ -17,21 +17,21 @@ bool Game::Init(LPCWSTR appName, int width, int height)
 #endif // _DEBUG
 
     auto ball = new Ball(device, context);
-    ball->Init(0.f, 0.f, 0.1f, 0.1f);
+    ball->Init(0.f, 0.f, 0.05f, 0.05f);
 
     AddBall(ball);
 
     platformRight = new Platform(device, context);
-    platformRight->Init(0.9f, 0.f, 0.1f, 0.5f);
+    platformRight->Init(0.95f, 0.0f, 0.05f, 0.5f);
 
     platformLeft = new Platform(device, context);
-    platformLeft->Init(-0.9f, 0.0f, 0.1f, 0.5f);
+    platformLeft->Init(-0.95f, 0.0f, 0.05f, 0.5f);
 
     wallUp = new Platform(device, context);
-    wallUp->Init(0.0f, 0.95f, 2.0f, 0.1f);
+    wallUp->Init(0.0f, 0.98f, 2.0f, 0.05f);
 
     wallDown = new Platform(device, context);
-    wallDown->Init(0.0f, -0.95f, 2.0f, 0.1f);
+    wallDown->Init(0.0f, -0.98f, 2.0f, 0.05f);
 
     walls.push_back(wallUp);
     walls.push_back(wallDown);
@@ -114,7 +114,7 @@ void Game::Update()
             ball->wasColliding = true;
         }
 
-        platformLeft->Update();
+        platformLeft->Update(deltaTime);
 
 
         col = platformRight->GetCollider();
@@ -130,7 +130,7 @@ void Game::Update()
             ball->wasColliding = true;
         }
 
-        platformRight->Update();
+        platformRight->Update(deltaTime);
 
 
         for (auto wall : walls)
@@ -148,7 +148,7 @@ void Game::Update()
                 ball->wasColliding = true;
             }
 
-            wall->Update();
+            wall->Update(0.f);
         }
 
         if (ball->GetCollider().Center.x < -1.f)
@@ -307,10 +307,12 @@ void Game::MessageHandler()
         switch (msg.wParam)
         {
         case 119: // W key
-            platformLeft->UpdateOffset(0.0f, 0.05f);
+            platformLeft->KeyDown(true);
+            platformLeft->IsUpKey(true);
             break;
         case 115: // S key
-            platformLeft->UpdateOffset(0.0f, -0.05f);
+            platformLeft->KeyDown(true);
+            platformLeft->IsUpKey(false);
             break;
         }
 
@@ -320,21 +322,42 @@ void Game::MessageHandler()
       
         switch (msg.wParam)
         {
-            break;
         case VK_LEFT:
             break;
         case VK_RIGHT:
             break;
         case VK_UP:
-            platformRight->UpdateOffset(0.0f, 0.05f);
+            platformRight->KeyDown(true);
+            platformRight->IsUpKey(true);
             break;
         case VK_DOWN:
-            platformRight->UpdateOffset(0.0f, -0.05f);
+            platformRight->KeyDown(true);
+            platformRight->IsUpKey(false);
             break;
         }
         break;
     case WM_KEYUP:
         InputDevice::Get().OnKeyUp(msg.wParam);
+
+        switch (msg.wParam)
+        {
+        case VK_UP:
+            platformRight->KeyDown(false);
+            platformRight->IsUpKey(true);
+            break;
+        case VK_DOWN:
+            platformRight->KeyDown(false);
+            platformRight->IsUpKey(false);
+            break;
+        case 87: // W key
+            platformLeft->KeyDown(false);
+            platformLeft->IsUpKey(true);
+            break;
+        case 83: // S key
+            platformLeft->KeyDown(false);
+            platformLeft->IsUpKey(false);
+            break;
+        }
 
         break;
     case WM_MOUSEMOVE:
