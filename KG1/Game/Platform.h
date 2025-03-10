@@ -14,7 +14,7 @@ public:
     bool Draw();
     void UpdateOffset(float x, float y);
     void KeyDown(bool isDown);
-    void IsUpKey(bool isUp);
+    void KeyPressed(int keyNum);
     inline DirectX::BoundingBox GetCollider() const { return collider; }
 
     Vector2 startPos = { 0.f, 0.f };
@@ -22,7 +22,7 @@ public:
     float height = 0.5f;
 
     bool isKeyDown = false;
-    float speed = 0.5f;
+    float speed = 2.0f;
     Vector2 direction = { 0.0f, 0.0f };
 
     TriangleComponent* mesh = nullptr;

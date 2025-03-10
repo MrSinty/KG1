@@ -22,8 +22,8 @@ int main()
         while (!Game::Get().GetShouldClose())
         {
             Game::Get().MessageHandler();
-            Game::Get().Update();
-            Game::Get().Draw();
+            Game::Get().Tick();
+            //Game::Get().Draw();
         }
 
         Game::Get().Shutdown();

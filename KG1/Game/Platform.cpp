@@ -12,8 +12,7 @@ void Platform::Init(float startX, float startY, float wwidth, float hheight)
     width = wwidth / 2;
     height = hheight / 2;
 
-    mesh->SetLocationAndForm(startPos, wwidth, hheight);
-    mesh->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+    //mesh->SetLocationAndForm(startPos, wwidth, hheight);
     mesh->Init();
 
     collider.Center = { startPos.x, startPos.y, 0.0f };
@@ -22,11 +21,8 @@ void Platform::Init(float startX, float startY, float wwidth, float hheight)
 
 void Platform::Update(float deltaTime)
 {
-    if (isKeyDown)
-    {
-        Vector2 offset = direction * speed * deltaTime;
-        UpdateOffset(offset.x, offset.y);
-    }
+    Vector2 offset = direction * speed * deltaTime;
+    UpdateOffset(offset.x, offset.y);
 
     mesh->Update();
 }
@@ -51,14 +47,26 @@ void Platform::KeyDown(bool isDown)
         isKeyDown = false;
 }
 
-void Platform::IsUpKey(bool isUp)
+void Platform::KeyPressed(int keyNum) // 0 - Up, 1 - Down, 2 - Right, 3 - Left
 {
     if (isKeyDown)
     {
-        if (isUp)
-            direction = { 0.0f, 1.0f };
-        else
-            direction = { 0.0f, -1.0f };
+        switch (keyNum)
+        {
+        case 0:
+            direction += { 0.0f, 1.0f };
+            break;
+        case 1:
+            direction += { 0.0f, -1.0f };
+            break;
+        case 2:
+            direction += { 1.0f, 0.0f };
+            break;
+        case 3:
+            direction += { -1.0f, 0.0f };
+            break;
+        }
+        direction.Normalize(direction);
     }
     else
         direction = { 0.f, 0.f };

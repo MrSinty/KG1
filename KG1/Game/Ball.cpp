@@ -11,7 +11,7 @@ void Ball::Init(float startX, float startY, float wwidth, float hheight)
     width = wwidth / 2;
     height = hheight / 2;
 
-    mesh->SetLocationAndForm(startPos, wwidth, hheight);
+    mesh->SetLocationAndForm(startPos, wwidth, hheight, 1.0f);
     mesh->Init();
 
     collider.Center = { startPos.x, startPos.y, 0.0f };

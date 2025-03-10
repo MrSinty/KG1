@@ -7,7 +7,6 @@ TriangleComponent::TriangleComponent(Microsoft::WRL::ComPtr<ID3D11Device>& dev,
     deviceContext = dContext;
 }
 
-
 TriangleComponent::~TriangleComponent()
 {
     ClearData();
@@ -60,6 +59,9 @@ void TriangleComponent::Update()
 {
     if (constBuff.Get())
     {
+        constBuff.data.mWorld = World.Transpose();
+        constBuff.data.mView = View.Transpose();
+        constBuff.data.mProjection = Proj.Transpose();
         constBuff.data.offset = offset;
         constBuff.data.color = color;
         constBuff.data.scale = scale;
@@ -200,11 +202,12 @@ bool TriangleComponent::CreateVPBuffer()
     return true;
 }
 
-void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float hheight)
+void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float hheight, float ddepth)
 {
     centerPoint = center;
     width = wwidth;
     height = hheight;
+    depth = ddepth;
 
     renderPoints[0].x = centerPoint.x - width / 2;
     renderPoints[0].y = centerPoint.y + height / 2;
@@ -217,6 +220,15 @@ void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float h
 
     renderPoints[6].x = centerPoint.x + width / 2;
     renderPoints[6].y = centerPoint.y + height / 2;
+
+    //TODO: set renderPoints with a cube logic
+}
+
+void TriangleComponent::SetMatricies(Matrix& wrld, Matrix& view, Matrix& proj)
+{
+    World = wrld;
+    View = view;
+    Proj = proj;
 }
 
 void TriangleComponent::SetVertexCoordinates(std::vector<Vector2>& points)

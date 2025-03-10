@@ -16,25 +16,35 @@ bool Game::Init(LPCWSTR appName, int width, int height)
     DXDebug::Get().Init(device);
 #endif // _DEBUG
 
-    auto ball = new Ball(device, context);
-    ball->Init(0.f, 0.f, 0.05f, 0.05f);
+    //auto ball = new Ball(device, context);
+    //ball->Init(0.f, 0.f, 0.05f, 0.05f);
 
-    AddBall(ball);
+    //AddBall(ball);
 
     platformRight = new Platform(device, context);
-    platformRight->Init(0.95f, 0.0f, 0.05f, 0.5f);
+    platformRight->Init(0.0f, 0.0f, 0.1f, 0.5f);
 
-    platformLeft = new Platform(device, context);
-    platformLeft->Init(-0.95f, 0.0f, 0.05f, 0.5f);
+    //cube->Init();
 
-    wallUp = new Platform(device, context);
-    wallUp->Init(0.0f, 0.98f, 2.0f, 0.05f);
+    //platformLeft = new Platform(device, context);
+    //platformLeft->Init(-0.95f, 0.0f, 0.05f, 0.5f);
 
-    wallDown = new Platform(device, context);
-    wallDown->Init(0.0f, -0.98f, 2.0f, 0.05f);
+    //wallUp = new Platform(device, context);
+    //wallUp->Init(0.0f, 0.98f, 2.0f, 0.05f);
 
-    walls.push_back(wallUp);
-    walls.push_back(wallDown);
+    //wallDown = new Platform(device, context);
+    //wallDown->Init(0.0f, -0.98f, 2.0f, 0.05f);
+
+    //walls.push_back(wallUp);
+    //walls.push_back(wallDown);
+    m_world = Matrix::Identity;
+
+    m_view = Matrix::CreateLookAt(Vector3(2.f, 2.f, 2.f),
+        Vector3::Zero, Vector3::UnitY);
+
+    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 3.f,
+        float(screenWidth) / float(screenHeight), 0.1f, 100.f);
+
 
     return true;
 }
@@ -46,11 +56,14 @@ bool Game::Init()
 
 void Game::Run()
 {
+    //timer.SetFixedTimeStep(true);
+    //timer.SetTargetElapsedSeconds(1.f / 60.f);
+
     isShouldExit = false;
 
-    prevTime = std::chrono::steady_clock::now();
-    totalTime = 0;
-    frameCount = 0;
+    //prevTime = std::chrono::steady_clock::now();
+    //totalTime = 0;
+    //frameCount = 0;
 }
 
 void Game::Shutdown()
@@ -80,89 +93,108 @@ void Game::Shutdown()
 
 void Game::Update()
 {
-    auto curTime = std::chrono::steady_clock::now();
-    float deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime).count() / 1000000.0f;
-    prevTime = curTime;
+    //auto curTime = std::chrono::steady_clock::now();
+    //float deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime).count() / 1000000.0f;
+    auto delta = float(timer.GetElapsedSeconds());
+    //prevTime = curTime;
 
-    totalTime += deltaTime;
-    frameCount++;
+    //totalTime += delta;
+    //frameCount++;
+    static float t = 0.0f;
+    t += delta;
 
-    if (totalTime > 1.0f) {
-        float fps = frameCount / totalTime;
+    m_world = Matrix::CreateRotationY(t);
 
-        totalTime -= 1.0f;
+    platformRight->mesh->SetMatricies(m_world, m_view, m_proj);
 
-        WCHAR text[256];
-        swprintf_s(text, TEXT("FPS: %f"), fps);
-        SetWindowText(display->GetWindow(), text);
+    platformRight->Update(delta);
 
-        frameCount = 0;
-    }
+    //if (totalTime > 1.0f) {
+    //    float fps = frameCount / totalTime;
 
-    for (auto ball : balls)
-    {
-        DirectX::BoundingBox col = platformLeft->GetCollider();
-        if (ball->CheckCollision(col))
+    //    totalTime -= 1.0f;
+
+    //    WCHAR text[256];
+    //    swprintf_s(text, TEXT("FPS: %f"), fps);
+    //    SetWindowText(display->GetWindow(), text);
+
+    //    frameCount = 0;
+    //}
+
+    //for (auto ball : balls)
+    //{
+    //    DirectX::BoundingBox col = platformLeft->GetCollider();
+    //    if (ball->CheckCollision(col))
+    //    {
+    //        ball->isColliding = true;
+
+    //        if (!ball->wasColliding)
+    //        {
+    //            ball->ChangeDirectionAfterPlatform(col.Center, false);
+    //        }
+
+    //        ball->wasColliding = true;
+    //    }
+
+    //    platformLeft->Update(delta);
+
+
+    //    col = platformRight->GetCollider();
+    //    if (ball->CheckCollision(col))
+    //    {
+    //        ball->isColliding = true;
+
+    //        if (!ball->wasColliding)
+    //        {
+    //            ball->ChangeDirectionAfterPlatform(col.Center, true);
+    //        }
+
+    //        ball->wasColliding = true;
+    //    }
+
+    //    platformRight->Update(delta);
+
+
+    //    for (auto wall : walls)
+    //    {
+    //        col = wall->GetCollider();
+    //        if (ball->CheckCollision(col))
+    //        {
+    //            ball->isColliding = true;
+
+    //            if (!ball->wasColliding)
+    //            {
+    //                ball->ChangeDirectionAfterWall();
+    //            }
+
+    //            ball->wasColliding = true;
+    //        }
+
+    //        wall->Update(0.f);
+    //    }
+
+    //    if (ball->GetCollider().Center.x < -1.f)
+    //    {
+    //        NewRound(false);
+    //    }
+
+    //    if (ball->GetCollider().Center.x > 1.f)
+    //    {
+    //        NewRound(true);
+    //    }
+
+    //    ball->Update(delta);
+    //}
+}
+
+void Game::Tick()
+{
+    timer.Tick([&]()
         {
-            ball->isColliding = true;
+            Update();
+        });
 
-            if (!ball->wasColliding)
-            {
-                ball->ChangeDirectionAfterPlatform(col.Center, false);
-            }
-
-            ball->wasColliding = true;
-        }
-
-        platformLeft->Update(deltaTime);
-
-
-        col = platformRight->GetCollider();
-        if (ball->CheckCollision(col))
-        {
-            ball->isColliding = true;
-
-            if (!ball->wasColliding)
-            {
-                ball->ChangeDirectionAfterPlatform(col.Center, true);
-            }
-
-            ball->wasColliding = true;
-        }
-
-        platformRight->Update(deltaTime);
-
-
-        for (auto wall : walls)
-        {
-            col = wall->GetCollider();
-            if (ball->CheckCollision(col))
-            {
-                ball->isColliding = true;
-
-                if (!ball->wasColliding)
-                {
-                    ball->ChangeDirectionAfterWall();
-                }
-
-                ball->wasColliding = true;
-            }
-
-            wall->Update(0.f);
-        }
-
-        if (ball->GetCollider().Center.x < -1.f)
-        {
-            NewRound(false);
-        }
-
-        if (ball->GetCollider().Center.x > 1.f)
-        {
-            NewRound(true);
-        }
-
-        ball->Update(deltaTime);
-    }
+    Draw();
 }
 
 void Game::Draw()
@@ -183,22 +215,22 @@ void Game::Draw()
 
     context->ClearRenderTargetView(rtv, color);
 
-    if (!platformLeft->Draw())
-        return;
+    //if (!platformLeft->Draw())
+    //    return;
     if (!platformRight->Draw())
         return;
+    
+    //for (auto wall : walls)
+    //{
+    //    if (!wall->Draw())
+    //        return;
+    //}
 
-    for (auto wall : walls)
-    {
-        if (!wall->Draw())
-            return;
-    }
-
-    for (auto ball : balls)
-    {
-        if (!ball->Draw())
-            return;
-    }
+    //for (auto ball : balls)
+    //{
+    //    if (!ball->Draw())
+    //        return;
+    //}
 
     context->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -304,18 +336,26 @@ void Game::MessageHandler()
     case WM_CHAR:
         InputDevice::Get().OnKeyDown(msg.wParam);
 
-        switch (msg.wParam)
-        {
-        case 119: // W key
-            platformLeft->KeyDown(true);
-            platformLeft->IsUpKey(true);
-            break;
-        case 115: // S key
-            platformLeft->KeyDown(true);
-            platformLeft->IsUpKey(false);
-            break;
-        }
-
+        //switch (msg.wParam)
+        //{
+        //case 119: // W key
+        //    platformLeft->KeyDown(true);
+        //    platformLeft->KeyPressed(0); // 0 - Up, 1 - Down, 2 - Right, 3 - Left
+        //    break;
+        //case 115: // S key
+        //    platformLeft->KeyDown(true);
+        //    platformLeft->KeyPressed(1);
+        //    break;
+        //case 100: // D key
+        //    platformLeft->KeyDown(true);
+        //    platformLeft->KeyPressed(2);
+        //    break;
+        //case 97: // A key
+        //    platformLeft->KeyDown(true);
+        //    platformLeft->KeyPressed(3);
+        //    break;
+        //}
+        break;
 
     case WM_KEYDOWN:
         InputDevice::Get().OnKeyDown(msg.wParam);
@@ -323,16 +363,20 @@ void Game::MessageHandler()
         switch (msg.wParam)
         {
         case VK_LEFT:
+            platformRight->KeyDown(true);
+            platformRight->KeyPressed(3); // 0 - Up, 1 - Down, 2 - Right, 3 - Left
             break;
         case VK_RIGHT:
+            platformRight->KeyDown(true);
+            platformRight->KeyPressed(2);
             break;
         case VK_UP:
             platformRight->KeyDown(true);
-            platformRight->IsUpKey(true);
+            platformRight->KeyPressed(0); // 0 - Up, 1 - Down, 2 - Right, 3 - Left
             break;
         case VK_DOWN:
             platformRight->KeyDown(true);
-            platformRight->IsUpKey(false);
+            platformRight->KeyPressed(1);
             break;
         }
         break;
@@ -343,20 +387,38 @@ void Game::MessageHandler()
         {
         case VK_UP:
             platformRight->KeyDown(false);
-            platformRight->IsUpKey(true);
+            platformRight->KeyPressed(-1);
             break;
         case VK_DOWN:
             platformRight->KeyDown(false);
-            platformRight->IsUpKey(false);
+            platformRight->KeyPressed(-1);
             break;
-        case 87: // W key
-            platformLeft->KeyDown(false);
-            platformLeft->IsUpKey(true);
+        case VK_RIGHT:
+            platformRight->KeyDown(false);
+            platformRight->KeyPressed(-1);
             break;
-        case 83: // S key
-            platformLeft->KeyDown(false);
-            platformLeft->IsUpKey(false);
+        case VK_LEFT:
+            platformRight->KeyDown(false);
+            platformRight->KeyPressed(-1);
             break;
+        //case 87: // W key
+        //    platformLeft->KeyDown(false);
+        //    platformLeft->KeyPressed(-1);
+        //    break;
+        //case 83: // S key
+        //    platformLeft->KeyDown(false);
+        //    platformLeft->KeyPressed(-1);
+        //    break;
+        //case 68: // D key
+        //    platformLeft->KeyDown(false);
+        //    platformLeft->KeyPressed(-1);
+        //    //platformLeft->UpdateOffset(0.0f, 0.05f);
+        //    break;
+        //case 65: // A key
+        //    platformLeft->KeyDown(false);
+        //    platformLeft->KeyPressed(-1);
+        //    //platformLeft->UpdateOffset(0.0f, -0.05f);
+        //    break;
         }
 
         break;

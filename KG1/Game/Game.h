@@ -7,7 +7,9 @@
 #include "WinDisplay/DisplayWin32.h"
 #include "Input/InputDevice.h"
 #include "../DXDebug/DXDebug.h"
+#include "StepTimer.h"
 
+#include <GeometricPrimitive.h>
 #include <windowsx.h>
 #include <iostream>
 #include <chrono>
@@ -20,6 +22,7 @@ public:
     void Run();
     void Shutdown();
     void Update();
+    void Tick();
     void Draw();
     void MessageHandler();
     void AddPlatform(Platform* platformObj);
@@ -65,9 +68,16 @@ private:
     Microsoft::WRL::ComPtr <ID3D11DeviceContext> context;
     Microsoft::WRL::ComPtr <IDXGISwapChain> swapChain;
 
+
     ID3D11Texture2D* backTex = nullptr;
     ID3D11RenderTargetView* rtv = nullptr;
 
+    DirectX::SimpleMath::Matrix m_world;
+    DirectX::SimpleMath::Matrix m_view;
+    DirectX::SimpleMath::Matrix m_proj;
+
+
+    TriangleComponent* cube = nullptr;
     std::vector<Platform*> platforms;
     Platform* platformLeft = nullptr;
     Platform* platformRight = nullptr;
@@ -83,6 +93,7 @@ private:
     std::chrono::time_point<std::chrono::steady_clock> prevTime{};
     float totalTime = 0;
     UINT frameCount = 0;
+    DX::StepTimer timer;
 
 
 private:

@@ -83,6 +83,9 @@
     <ClInclude Include="DXDebug\DXDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Game\StepTimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">

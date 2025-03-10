@@ -49,6 +49,9 @@
     <ClInclude Include="Game\Ball.h" />
     <ClInclude Include="Game\ConstatntBuffer\ConstantBuffer.h" />
     <ClInclude Include="Game\ConstatntBuffer\ConstantBufferTypes.h" />
+    <ClInclude Include="Game\StepTimer.h">
+      <DeploymentContent>true</DeploymentContent>
+    </ClInclude>
     <ClInclude Include="Game\WinDisplay\DisplayWin32.h" />
     <ClInclude Include="Game\Components\GameComponent.h" />
     <ClInclude Include="Game\Input\InputDevice.h" />
