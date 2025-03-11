@@ -14,7 +14,6 @@ TriangleComponent::~TriangleComponent()
 
 bool TriangleComponent::Init()
 {
-    // TODO: make rectangle vertex calculation from center point and width/height
     if (!CompileShader())
         return false;
 
@@ -25,7 +24,7 @@ bool TriangleComponent::Init()
 
     // RASTERIZER
     CD3D11_RASTERIZER_DESC rastDesc = {};
-    rastDesc.CullMode = D3D11_CULL_NONE;
+    rastDesc.CullMode = D3D11_CULL_FRONT;
     rastDesc.FillMode = D3D11_FILL_SOLID;
 
     auto res = device->CreateRasterizerState(&rastDesc, &rastState);
@@ -64,7 +63,6 @@ void TriangleComponent::Update()
         constBuff.data.mProjection = Proj.Transpose();
         constBuff.data.offset = offset;
         constBuff.data.color = color;
-        constBuff.data.scale = scale;
         constBuff.ApplyChanges();
     }
 }
@@ -84,20 +82,6 @@ bool TriangleComponent::CompileShader()
         &vertexShaderByteCode,
         &errorVertexCode
     );
-
-    //if (FAILED(res)) {
-    //    if (errorVertexCode) {
-    //        char* compileErrors = (char*)(errorVertexCode->GetBufferPointer());
-
-    //        std::cout << compileErrors << std::endl;
-    //    }
-    //    else
-    //    {
-    //        MessageBox(window, L"MyVeryFirstShader.hlsl", L"Missing Shader File", MB_OK);
-    //    }
-
-    //    return false;
-    //}
 
     D3D_SHADER_MACRO Shader_Macros[] = { "TEST", "1", "TCOLOR", "float4(0.0f, 1.0f, 0.0f, 1.0f)", nullptr, nullptr };
 
@@ -202,7 +186,7 @@ bool TriangleComponent::CreateVPBuffer()
     return true;
 }
 
-void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float hheight, float ddepth)
+void TriangleComponent::SetLocationAndForm(Vector3 center, float wwidth, float hheight, float ddepth)
 {
     centerPoint = center;
     width = wwidth;
@@ -211,17 +195,84 @@ void TriangleComponent::SetLocationAndForm(Vector2 center, float wwidth, float h
 
     renderPoints[0].x = centerPoint.x - width / 2;
     renderPoints[0].y = centerPoint.y + height / 2;
+    renderPoints[0].z = centerPoint.z - depth / 2;
 
     renderPoints[2].x = centerPoint.x + width / 2;
-    renderPoints[2].y = centerPoint.y - height / 2;
+    renderPoints[2].y = centerPoint.y + height / 2;
+    renderPoints[2].z = centerPoint.z - depth / 2;
 
-    renderPoints[4].x = centerPoint.x - width / 2;
-    renderPoints[4].y = centerPoint.y - height / 2;
+    renderPoints[4].x = centerPoint.x + width / 2;
+    renderPoints[4].y = centerPoint.y + height / 2;
+    renderPoints[4].z = centerPoint.z + depth / 2;
 
-    renderPoints[6].x = centerPoint.x + width / 2;
+    renderPoints[6].x = centerPoint.x - width / 2;
     renderPoints[6].y = centerPoint.y + height / 2;
+    renderPoints[6].z = centerPoint.z + depth / 2;
 
-    //TODO: set renderPoints with a cube logic
+    renderPoints[8].x = centerPoint.x - width / 2;
+    renderPoints[8].y = centerPoint.y - height / 2;
+    renderPoints[8].z = centerPoint.z - depth / 2;
+
+    renderPoints[10].x = centerPoint.x + width / 2;
+    renderPoints[10].y = centerPoint.y - height / 2;
+    renderPoints[10].z = centerPoint.z - depth / 2;
+
+    renderPoints[12].x = centerPoint.x + width / 2;
+    renderPoints[12].y = centerPoint.y - height / 2;
+    renderPoints[12].z = centerPoint.z + depth / 2;
+
+    renderPoints[14].x = centerPoint.x - width / 2;
+    renderPoints[14].y = centerPoint.y - height / 2;
+    renderPoints[14].z = centerPoint.z + depth / 2;
+}
+
+void TriangleComponent::ChangeScale(Vector3 scale)
+{
+    LocalMat *= Matrix::CreateScale(scale);
+}
+
+void TriangleComponent::ChangeRotX(float radians)
+{
+    LocalMat *= Matrix::CreateRotationX(radians);
+}
+
+void TriangleComponent::ChangeRotY(float radians)
+{
+    LocalMat *= Matrix::CreateRotationY(radians);
+}
+
+void TriangleComponent::ChangeRotZ(float radians)
+{
+    LocalMat *= Matrix::CreateRotationZ(radians);
+}
+
+void TriangleComponent::ChangeTranslation(Vector3 distance)
+{
+    LocalMat *= Matrix::CreateTranslation(distance);
+}
+
+void TriangleComponent::RotateAroundPoint(Vector3 pivot, float angle)
+{
+    Matrix translationToPivot = Matrix::CreateTranslation(-pivot);
+
+    Matrix rotation = Matrix::CreateRotationY(angle);
+
+    Matrix translationBack = Matrix::CreateTranslation(pivot);
+
+    LocalMat *= translationToPivot * rotation * translationBack;
+}
+
+void TriangleComponent::UpdateTransform()
+{
+    World = LocalMat;
+    //centerPoint = DirectX::XMVector3Transform(centerPoint, LocalMat);
+    LocalMat = Matrix::Identity;
+}
+
+void TriangleComponent::UpdateTransform(const Matrix& parentWorld)
+{
+    World = LocalMat * parentWorld;
+    LocalMat = Matrix::Identity;
 }
 
 void TriangleComponent::SetMatricies(Matrix& wrld, Matrix& view, Matrix& proj)
@@ -231,12 +282,19 @@ void TriangleComponent::SetMatricies(Matrix& wrld, Matrix& view, Matrix& proj)
     Proj = proj;
 }
 
-void TriangleComponent::SetVertexCoordinates(std::vector<Vector2>& points)
+void TriangleComponent::SetMatricies(Matrix& view, Matrix& proj)
+{
+    View = view;
+    Proj = proj;
+}
+
+void TriangleComponent::SetVertexCoordinates(std::vector<Vector3>& points)
 {
     for (int i = 0; i < renderPoints.size(); i += 2)
     {
         renderPoints[i].x = points[i / 2].x;
         renderPoints[i].y = points[i / 2].y;
+        renderPoints[i].z = points[i / 2].z;
     }
 }
 
@@ -249,11 +307,6 @@ void TriangleComponent::SetOffset(float x, float y)
 void TriangleComponent::SetColor(float r, float g, float b, float a)
 {
     color = Vector4( r, g, b, a );
-}
-
-void TriangleComponent::SetScale(float sscale)
-{
-    scale = sscale;
 }
 
 void TriangleComponent::UpdateOffset(float x, float y)
@@ -270,6 +323,16 @@ Vector4 TriangleComponent::GetLocationAndForm()
     vec.z = width;
     vec.w = height;
     return vec;
+}
+
+DirectX::SimpleMath::Matrix TriangleComponent::GetLocalMatrix()
+{
+    return LocalMat;
+}
+
+DirectX::SimpleMath::Vector3 TriangleComponent::GetCenterPoint()
+{
+    return centerPoint;
 }
 
 void TriangleComponent::ClearData()

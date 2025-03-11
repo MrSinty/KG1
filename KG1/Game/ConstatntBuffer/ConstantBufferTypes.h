@@ -8,8 +8,6 @@ struct ConstBuffVertexshader
     DirectX::XMMATRIX mProjection;
     DirectX::XMFLOAT4 offset;
     DirectX::XMFLOAT4 color;
-    float scale;
-    float padding[3];
 };
 
 struct CB_PS_pixelshader

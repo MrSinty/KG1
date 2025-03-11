@@ -21,7 +21,7 @@ public:
     inline bool CheckCollision(DirectX::BoundingBox& otherCollider) const { return collider.Intersects(otherCollider); }
     inline DirectX::BoundingBox GetCollider() const { return collider; }
 
-    Vector2 startPos = { 0.f, 0.f };
+    Vector3 startPos = { 0.f, 0.f, 0.f };
     float width = 0.5f;
     float height = 0.5f;
 

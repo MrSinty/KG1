@@ -6,17 +6,18 @@ Platform::Platform(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::Co
     mesh = new TriangleComponent(dev, dContext);
 }
 
-void Platform::Init(float startX, float startY, float wwidth, float hheight)
+void Platform::Init(float startX, float startY, float startZ, float wwidth, float hheight, float ddepth)
 {
-    startPos = { startX, startY };
+    startPos = { startX, startY, startZ };
     width = wwidth / 2;
     height = hheight / 2;
+    depth = ddepth / 2;
 
-    //mesh->SetLocationAndForm(startPos, wwidth, hheight);
+    mesh->SetLocationAndForm(startPos, wwidth, hheight, ddepth);
     mesh->Init();
 
-    collider.Center = { startPos.x, startPos.y, 0.0f };
-    collider.Extents = { width, height, 0.0f };
+    collider.Center = { startPos.x, startPos.y, startPos.z };
+    collider.Extents = { width, height, depth };
 }
 
 void Platform::Update(float deltaTime)

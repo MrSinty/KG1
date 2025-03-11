@@ -12,39 +12,33 @@ bool Game::Init(LPCWSTR appName, int width, int height)
     if (!CreateRTV())
         return false;
 
+    CreateDepthStencilBuffer();
+
 #ifdef _DEBUG
     DXDebug::Get().Init(device);
 #endif // _DEBUG
 
-    //auto ball = new Ball(device, context);
-    //ball->Init(0.f, 0.f, 0.05f, 0.05f);
-
-    //AddBall(ball);
-
     platformRight = new Platform(device, context);
-    platformRight->Init(0.0f, 0.0f, 0.1f, 0.5f);
+    platformRight->Init(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+    platforms.push_back(platformRight);
 
-    //cube->Init();
+    auto* platformTemp = new Platform(device, context);
+    platformTemp->Init(0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.5f);
+    platforms.push_back(platformTemp);
 
-    //platformLeft = new Platform(device, context);
-    //platformLeft->Init(-0.95f, 0.0f, 0.05f, 0.5f);
+    platformTemp = new Platform(device, context);
+    platformTemp->Init(0.0f, 0.0f, 0.0f, 0.25f, 0.25f, 0.25f);
+    platforms.push_back(platformTemp);
 
-    //wallUp = new Platform(device, context);
-    //wallUp->Init(0.0f, 0.98f, 2.0f, 0.05f);
+    mWorld = Matrix::Identity;
 
-    //wallDown = new Platform(device, context);
-    //wallDown->Init(0.0f, -0.98f, 2.0f, 0.05f);
-
-    //walls.push_back(wallUp);
-    //walls.push_back(wallDown);
-    m_world = Matrix::Identity;
-
-    m_view = Matrix::CreateLookAt(Vector3(2.f, 2.f, 2.f),
+    mView = Matrix::CreateLookAt(Vector3(2.f, 2.f, 2.f),
         Vector3::Zero, Vector3::UnitY);
 
-    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 3.f,
+    mProj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PIDIV2,
         float(screenWidth) / float(screenHeight), 0.1f, 100.f);
 
+    platformRight->mesh->SetMatricies(mWorld, mView, mProj);
 
     return true;
 }
@@ -93,33 +87,46 @@ void Game::Shutdown()
 
 void Game::Update()
 {
-    //auto curTime = std::chrono::steady_clock::now();
-    //float deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime).count() / 1000000.0f;
     auto delta = float(timer.GetElapsedSeconds());
-    //prevTime = curTime;
-
-    //totalTime += delta;
-    //frameCount++;
     static float t = 0.0f;
     t += delta;
+    if (t >= 6.26f)
+        t = 0.0f;
 
-    m_world = Matrix::CreateRotationY(t);
 
-    platformRight->mesh->SetMatricies(m_world, m_view, m_proj);
+        platforms[1]->mesh->ChangeRotZ(t);
+        float orbitRadius = 1.5f;
+        platforms[1]->mesh->ChangeTranslation(Vector3(0.f, 0.f, orbitRadius));
+        platforms[1]->mesh->ChangeRotY(t);
+    
 
-    platformRight->Update(delta);
+        Matrix mPlanet = platforms[1]->mesh->GetLocalMatrix();
+        mPlanet = mPlanet.Invert();
+        Vector3 posPlanet = platforms[1]->mesh->GetCenterPoint();
+        Vector3 worldPosPlanet = DirectX::XMVector3TransformCoord(posPlanet, mPlanet);
 
-    //if (totalTime > 1.0f) {
-    //    float fps = frameCount / totalTime;
+        Matrix wrld2 = DirectX::XMMatrixTranslationFromVector(worldPosPlanet);
+        wrld2 *= Matrix::CreateRotationY(t);
 
-    //    totalTime -= 1.0f;
+        platforms[2]->mesh->ChangeRotY(t);
 
-    //    WCHAR text[256];
-    //    swprintf_s(text, TEXT("FPS: %f"), fps);
-    //    SetWindowText(display->GetWindow(), text);
 
-    //    frameCount = 0;
-    //}
+
+
+
+        platforms[2]->mesh->UpdateTransform(mPlanet);
+        platforms[2]->mesh->SetMatricies(mView, mProj);
+
+        platforms[1]->mesh->UpdateTransform();
+        platforms[1]->mesh->SetMatricies(mView, mProj);
+
+
+
+    for (auto& plfm : platforms)
+    {
+        plfm->Update(delta);
+    }
+
 
     //for (auto ball : balls)
     //{
@@ -211,30 +218,79 @@ void Game::Draw()
 
     context->RSSetViewports(1, &viewport);
 
-    context->OMSetRenderTargets(1, &rtv, nullptr);
+    context->OMSetDepthStencilState(pDepthStencilState, 1);
+    context->OMSetRenderTargets(1, &rtv, pDepthStencilView);
 
     context->ClearRenderTargetView(rtv, color);
+    context->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xFF);
 
-    //if (!platformLeft->Draw())
-    //    return;
-    if (!platformRight->Draw())
-        return;
-    
-    //for (auto wall : walls)
-    //{
-    //    if (!wall->Draw())
-    //        return;
-    //}
 
-    //for (auto ball : balls)
-    //{
-    //    if (!ball->Draw())
-    //        return;
-    //}
+    //platforms[0]->Draw();
+    //platforms[1]->Draw();
+
+    for (auto& plfm : platforms)
+    {
+        if (!plfm->Draw())
+            return;
+    }
 
     context->OMSetRenderTargets(0, nullptr, nullptr);
 
     swapChain->Present(1, 0);
+}
+
+void Game::CreateDepthStencilBuffer()
+{
+    D3D11_TEXTURE2D_DESC descDepth;
+    descDepth.Width = screenWidth;
+    descDepth.Height = screenHeight;
+    descDepth.MipLevels = 1;
+    descDepth.ArraySize = 1;
+    descDepth.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    descDepth.SampleDesc.Count = 1;
+    descDepth.SampleDesc.Quality = 0;
+    descDepth.Usage = D3D11_USAGE_DEFAULT;
+    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    descDepth.CPUAccessFlags = 0;
+    descDepth.MiscFlags = 0;
+    if (FAILED(device->CreateTexture2D(&descDepth, NULL, &pDepthStencilBuffer)))
+        return;
+
+    D3D11_DEPTH_STENCIL_DESC dsDesc;
+    // Depth test parameters
+    dsDesc.DepthEnable = true;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+    // Stencil test parameters
+    dsDesc.StencilEnable = true;
+    dsDesc.StencilReadMask = 0xFF;
+    dsDesc.StencilWriteMask = 0xFF;
+
+    // Stencil operations if pixel is front-facing
+    dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+    dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+    // Stencil operations if pixel is back-facing
+    dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+    dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+    // Create depth stencil state
+    device->CreateDepthStencilState(&dsDesc, &pDepthStencilState);
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+    descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    descDSV.Texture2D.MipSlice = 0;
+    if (FAILED(device->CreateDepthStencilView(
+        pDepthStencilBuffer, // Depth stencil texture
+        &descDSV, // Depth stencil desc
+        &pDepthStencilView)))
+        return;
 }
 
 bool Game::CreateRTV()

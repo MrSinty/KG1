@@ -24,14 +24,24 @@ public:
     void Update() override;
     bool CompileShader();
     bool CreateVPBuffer();
-    void SetLocationAndForm(Vector2 center, float width, float height, float depth);
+    void SetLocationAndForm(Vector3 center, float width, float height, float depth);
+    void ChangeScale(Vector3 scale);
+    void ChangeRotX(float radians);
+    void ChangeRotY(float radians);
+    void ChangeRotZ(float radians);
+    void ChangeTranslation(Vector3 distance);
+    void RotateAroundPoint(Vector3 pivot, float angle);
+    void UpdateTransform();
+    void UpdateTransform(const Matrix& parentWorld);
     void SetMatricies(Matrix& wrld, Matrix& view, Matrix& proj);
-    void SetVertexCoordinates(std::vector<Vector2>& points);
+    void SetMatricies(Matrix& view, Matrix& proj);
+    void SetVertexCoordinates(std::vector<Vector3>& points);
     void SetOffset(float x, float y);
     void SetColor(float r, float g, float b, float a);
-    void SetScale(float scale);
     void UpdateOffset(float x, float y);
     Vector4 GetLocationAndForm();
+    Matrix GetLocalMatrix();
+    Vector3 GetCenterPoint();
     void ClearData();
 
 private:
@@ -59,7 +69,6 @@ private:
         Vector4(-1.0f, -1.0f, 1.0f, 1.0f), Vector4(0.0f, 0.0f, 0.0f, 1.0f),
     };
 
-    //std::vector<int> indices = { 0,1,2, 1,0,3, 4,5,6, 5,4,7 };
     std::vector<int> indices = 
     {
         3,1,0,
@@ -84,13 +93,13 @@ private:
     Matrix World;
     Matrix View;
     Matrix Proj;
-    Vector2 centerPoint = { 0.f, 0.f };
+    Matrix LocalMat;
+    Vector3 centerPoint = { 0.f, 0.f, 0.f };
     float width = 1.0f;
     float height = 1.0f;
     float depth = 1.0f;
     Vector4 offset = { 0.0f, 0.0f, 0.0f, 0.0f };
     Vector4 color = { 0.0f, 0.0f, 0.0f, 0.0f };
-    float scale = 1.0f;
 
     UINT strides[1] = { 32 };
     UINT offsets[1] = { 0 };

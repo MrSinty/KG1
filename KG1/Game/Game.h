@@ -68,14 +68,16 @@ private:
     Microsoft::WRL::ComPtr <ID3D11DeviceContext> context;
     Microsoft::WRL::ComPtr <IDXGISwapChain> swapChain;
 
-
     ID3D11Texture2D* backTex = nullptr;
     ID3D11RenderTargetView* rtv = nullptr;
 
-    DirectX::SimpleMath::Matrix m_world;
-    DirectX::SimpleMath::Matrix m_view;
-    DirectX::SimpleMath::Matrix m_proj;
+    ID3D11Texture2D* pDepthStencilBuffer;
+    ID3D11DepthStencilState* pDepthStencilState;
+    ID3D11DepthStencilView* pDepthStencilView;
 
+    DirectX::SimpleMath::Matrix mWorld;
+    DirectX::SimpleMath::Matrix mView;
+    DirectX::SimpleMath::Matrix mProj;
 
     TriangleComponent* cube = nullptr;
     std::vector<Platform*> platforms;
@@ -90,15 +92,12 @@ private:
     int scoreRight = 0;
 
     MSG msg = {};
-    std::chrono::time_point<std::chrono::steady_clock> prevTime{};
-    float totalTime = 0;
-    UINT frameCount = 0;
     DX::StepTimer timer;
-
 
 private:
     bool CreateRTV();
     bool CreateSwapChain();
+    void CreateDepthStencilBuffer();
     void EndFrame();
     void Exit();
     void PrepareFrame();

@@ -5,7 +5,6 @@ struct ConstantData
     matrix Projection;
     float4 offset;
     float4 color;
-    float scale;
 };
 
 cbuffer ConstBuff : register(b0) {
@@ -31,13 +30,9 @@ PS_IN VSMain(VS_IN input, uint vId : SV_VertexID)
 	
     input.pos.w = 1.0f;
 
-    float4 scaledPos = input.pos * ConstData.scale;
-
     output.pos = mul( input.pos, ConstData.World );
     output.pos = mul( output.pos, ConstData.View );
     output.pos = mul( output.pos, ConstData.Projection );    
-
-    output.pos = output.pos * ConstData.scale;
 
     output.pos = float4(output.pos.xyz + ConstData.offset.xyz, output.pos.w);
     output.color = input.color + ConstData.color;
@@ -49,8 +44,8 @@ PS_IN VSMain(VS_IN input, uint vId : SV_VertexID)
 
 float4 PSMain(PS_IN input) : SV_Target
 {
-    float depthValue;
     float4 col;
+    float depthValue;
 
     // Get the depth value of the pixel by dividing the Z pixel depth by the homogeneous W coordinate.
     depthValue = input.depthPos.z / input.depthPos.w;

@@ -7,7 +7,7 @@ Ball::Ball(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::ComPtr<ID3
 
 void Ball::Init(float startX, float startY, float wwidth, float hheight)
 {
-    startPos = { startX, startY };
+    startPos = { startX, startY, 0.1f };
     width = wwidth / 2;
     height = hheight / 2;
 
