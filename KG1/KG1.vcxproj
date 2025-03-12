@@ -32,6 +32,8 @@
     <ClCompile Include="Game\Game.cpp" />
     <ClCompile Include="Game\Components\TriangleComponent.cpp" />
     <ClCompile Include="Game\Platform.cpp" />
+    <ClCompile Include="Game\Transform\Transform.cpp" />
+    <ClCompile Include="Game\Planet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\MyVeryFirstShader.hlsl">
@@ -56,9 +58,11 @@
     <ClInclude Include="Game\Components\GameComponent.h" />
     <ClInclude Include="Game\Input\InputDevice.h" />
     <ClInclude Include="Game\Platform.h" />
+    <ClInclude Include="Game\Planet.h" />
     <ClInclude Include="Support\DXInclude.h" />
     <ClInclude Include="Game\Game.h" />
     <ClInclude Include="Game\Components\TriangleComponent.h" />
+    <ClInclude Include="Game\Transform\Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

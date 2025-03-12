@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Components/TriangleComponent.h"
+#include "Planet.h"
 #include "Platform.h"
 #include "Ball.h"
 #include "../Support/DXInclude.h"
@@ -79,14 +80,10 @@ private:
     DirectX::SimpleMath::Matrix mView;
     DirectX::SimpleMath::Matrix mProj;
 
-    TriangleComponent* cube = nullptr;
+    std::vector<Planet*> planets;
     std::vector<Platform*> platforms;
     Platform* platformLeft = nullptr;
     Platform* platformRight = nullptr;
-    Platform* wallUp = nullptr;
-    Platform* wallDown = nullptr;
-    std::vector<Platform*> walls;
-    std::vector<Ball*> balls;
 
     int scoreLeft = 0;
     int scoreRight = 0;

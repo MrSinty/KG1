@@ -9,7 +9,7 @@ public:
     Platform(Microsoft::WRL::ComPtr<ID3D11Device>& dev,
         Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext);
 
-    void Init(float startX, float startY, float startZ, float width, float height, float depth);
+    void Init(Vector3 startPoint, Vector3 extends, Vector3 scale);
     void Update(float deltaTime);
     bool Draw();
     void UpdateOffset(float x, float y);
@@ -26,6 +26,7 @@ public:
     float speed = 2.0f;
     Vector2 direction = { 0.0f, 0.0f };
 
+    Transform* transform;
     TriangleComponent* mesh = nullptr;
     DirectX::BoundingBox collider;
 };

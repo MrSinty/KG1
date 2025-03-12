@@ -6,15 +6,20 @@ Platform::Platform(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::Co
     mesh = new TriangleComponent(dev, dContext);
 }
 
-void Platform::Init(float startX, float startY, float startZ, float wwidth, float hheight, float ddepth)
+void Platform::Init(Vector3 startPoint, Vector3 extends, Vector3 scale)
 {
-    startPos = { startX, startY, startZ };
-    width = wwidth / 2;
-    height = hheight / 2;
-    depth = ddepth / 2;
+    transform = new Transform();
+    transform->Position() = startPoint;
+    transform->Scale() = scale;
+    transform->UpdateWorldMatrix();
 
-    mesh->SetLocationAndForm(startPos, wwidth, hheight, ddepth);
-    mesh->Init();
+    startPos = { startPoint.x, startPoint.y, startPoint.z };
+    width = extends.x / 2;
+    height = extends.y / 2;
+    depth = extends.z / 2;
+
+    //mesh->SetLocationAndForm(startPos, extends.x, extends.y, extends.z);
+    mesh->Init(transform);
 
     collider.Center = { startPos.x, startPos.y, startPos.z };
     collider.Extents = { width, height, depth };
@@ -22,9 +27,7 @@ void Platform::Init(float startX, float startY, float startZ, float wwidth, floa
 
 void Platform::Update(float deltaTime)
 {
-    Vector2 offset = direction * speed * deltaTime;
-    UpdateOffset(offset.x, offset.y);
-
+    transform->Update(deltaTime);
     mesh->Update();
 }
 

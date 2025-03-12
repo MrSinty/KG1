@@ -26,6 +26,7 @@ public:
     float height = 0.5f;
 
     TriangleComponent* mesh;
+    Transform* transform;
     DirectX::BoundingBox collider;
 
     float centerArea = 0.2f;

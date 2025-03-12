@@ -1,10 +1,10 @@
 struct ConstantData
 {
     matrix World;
-    matrix View;
-    matrix Projection;
-    float4 offset;
-    float4 color;
+//    matrix View;
+//    matrix Projection;
+//    float4 offset;
+//    float4 color;
 };
 
 cbuffer ConstBuff : register(b0) {
@@ -29,13 +29,11 @@ PS_IN VSMain(VS_IN input, uint vId : SV_VertexID)
     PS_IN output = (PS_IN) 0;
 	
     input.pos.w = 1.0f;
-
     output.pos = mul( input.pos, ConstData.World );
-    output.pos = mul( output.pos, ConstData.View );
-    output.pos = mul( output.pos, ConstData.Projection );    
+    //output.pos = mul( output.pos, ConstData.View );
+    //output.pos = mul( output.pos, ConstData.Projection );    
 
-    output.pos = float4(output.pos.xyz + ConstData.offset.xyz, output.pos.w);
-    output.color = input.color + ConstData.color;
+    output.color = input.color;
 	
     output.depthPos = output.pos;
 

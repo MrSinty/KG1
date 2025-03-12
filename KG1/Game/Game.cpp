@@ -18,27 +18,81 @@ bool Game::Init(LPCWSTR appName, int width, int height)
     DXDebug::Get().Init(device);
 #endif // _DEBUG
 
-    platformRight = new Platform(device, context);
-    platformRight->Init(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-    platforms.push_back(platformRight);
+    auto* planet1 = new Planet(device, context);
 
-    auto* platformTemp = new Platform(device, context);
-    platformTemp->Init(0.0f, 0.0f, 0.0f, 0.5f, 0.5f, 0.5f);
-    platforms.push_back(platformTemp);
+    Vector3 pos(0.f, 0.f, -2.f);
+    Vector3 scal(1.f, 1.f, 1.f);
 
-    platformTemp = new Platform(device, context);
-    platformTemp->Init(0.0f, 0.0f, 0.0f, 0.25f, 0.25f, 0.25f);
-    platforms.push_back(platformTemp);
+    planet1->Init(pos, scal, nullptr, nullptr);
+    planet1->transform->SetSpeed(Vector3(), Vector3(), 0, Vector3(1.f, 0.f, 0.f), 1.f);
+    planets.push_back(planet1);
+
+
+
+    auto* planet2 = new Planet(device, context);
+
+    pos = { 1.f, 1.f, 1.f };
+    scal = { 0.6f, 0.6f, 0.6f };
+
+    planet2->Init(pos, scal, nullptr, nullptr);
+
+    Vector3 planet1Pos = planet1->transform->Position();
+    Vector3 planet2Pos = planet2->transform->Position();
+
+    planet2->transform->SetSpeed(Vector3(2.f, 2.f, 2.f),
+        Vector3(0.f, 1.f, 0.f), 1.f, Vector3(0.f, 1.f, 0.f), 1.f);
+    planets.push_back(planet2);
+
+    //Vector3 startPos = { 0.0f, 0.0f, 0.0f };
+    //Vector3 sizes = { 1.0f, 1.0f, 1.0f };
+    //Vector3 scales = { 1.0f, 1.0f, 1.0f };
+
+    //platformRight = new Platform(device, context);
+    //platformRight->Init(startPos, sizes, scales);
+    //platformRight->transform->SetSpeed(Vector3(), Vector3(), 0,
+    //    Vector3(0, 1, 0), 2);
+    //platforms.push_back(platformRight);
+
+    //startPos = { 0.0f, 0.5f, 0.0f };
+    //sizes = { 0.5f, 0.5f, 0.5f };
+    //auto* platformTemp = new Platform(device, context);
+    //platformTemp->Init(startPos, sizes, scales);
+    //Vector3 sunPos = platformRight->transform->Position();
+    //Vector3 planetPos = platformTemp->transform->Position();
+    //platformTemp->transform->SetSpeed(planetPos - sunPos,
+    //    Vector3(0, 1, 0), 2,
+    //    Vector3(0, 1, 0), 1.5f);
+    //platforms.push_back(platformTemp);
+
+    //startPos = { 0.0f, 1.0f, 0.0f };
+    //sizes = { 0.25f, 0.25f, 0.25f };
+    //auto* platformTemp2 = new Platform(device, context);
+    //platformTemp2->Init(startPos, sizes, scales);
+    //planetPos = platformTemp->transform->Position();
+    //Vector3 lunaPos = platformTemp2->transform->Position();
+    //platformTemp2->transform->SetSpeed(lunaPos - planetPos,
+    //    Vector3(0, 1, 0), 3,
+    //    Vector3(1, 0, 0), 1.f);
+    //platforms.push_back(platformTemp2);
 
     mWorld = Matrix::Identity;
-
     mView = Matrix::CreateLookAt(Vector3(2.f, 2.f, 2.f),
         Vector3::Zero, Vector3::UnitY);
 
     mProj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PIDIV2,
         float(screenWidth) / float(screenHeight), 0.1f, 100.f);
 
-    platformRight->mesh->SetMatricies(mWorld, mView, mProj);
+    //for (auto& planet : planets)
+    //{
+    //    planet->mesh->SetMatricies(mView, mProj);
+    //}
+
+    //for (auto& plfm : platforms)
+    //{
+    //    plfm->mesh->SetMatricies(mView, mProj);
+    //}
+
+    //platformRight->mesh->SetMatricies(mWorld, mView, mProj);
 
     return true;
 }
@@ -54,10 +108,6 @@ void Game::Run()
     //timer.SetTargetElapsedSeconds(1.f / 60.f);
 
     isShouldExit = false;
-
-    //prevTime = std::chrono::steady_clock::now();
-    //totalTime = 0;
-    //frameCount = 0;
 }
 
 void Game::Shutdown()
@@ -94,38 +144,15 @@ void Game::Update()
         t = 0.0f;
 
 
-        platforms[1]->mesh->ChangeRotZ(t);
-        float orbitRadius = 1.5f;
-        platforms[1]->mesh->ChangeTranslation(Vector3(0.f, 0.f, orbitRadius));
-        platforms[1]->mesh->ChangeRotY(t);
-    
-
-        Matrix mPlanet = platforms[1]->mesh->GetLocalMatrix();
-        mPlanet = mPlanet.Invert();
-        Vector3 posPlanet = platforms[1]->mesh->GetCenterPoint();
-        Vector3 worldPosPlanet = DirectX::XMVector3TransformCoord(posPlanet, mPlanet);
-
-        Matrix wrld2 = DirectX::XMMatrixTranslationFromVector(worldPosPlanet);
-        wrld2 *= Matrix::CreateRotationY(t);
-
-        platforms[2]->mesh->ChangeRotY(t);
-
-
-
-
-
-        platforms[2]->mesh->UpdateTransform(mPlanet);
-        platforms[2]->mesh->SetMatricies(mView, mProj);
-
-        platforms[1]->mesh->UpdateTransform();
-        platforms[1]->mesh->SetMatricies(mView, mProj);
-
-
-
-    for (auto& plfm : platforms)
+    for (auto& planet : planets)
     {
-        plfm->Update(delta);
+        planet->Update(delta);
     }
+
+    //for (auto& plfm : platforms)
+    //{
+    //    plfm->Update(delta);
+    //}
 
 
     //for (auto ball : balls)
@@ -224,15 +251,16 @@ void Game::Draw()
     context->ClearRenderTargetView(rtv, color);
     context->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0xFF);
 
-
-    //platforms[0]->Draw();
-    //platforms[1]->Draw();
-
-    for (auto& plfm : platforms)
+    for (auto& planet : planets)
     {
-        if (!plfm->Draw())
-            return;
+        planet->Draw();
     }
+
+    //for (auto& plfm : platforms)
+    //{
+    //    if (!plfm->Draw())
+    //        return;
+    //}
 
     context->OMSetRenderTargets(0, nullptr, nullptr);
 
@@ -362,7 +390,7 @@ void Game::AddPlatform(Platform* platformObj)
 
 void Game::AddBall(Ball* ballObj)
 {
-    balls.push_back(ballObj);
+    //balls.push_back(ballObj);
 }
 
 void Game::NewRound(bool isRightWin)

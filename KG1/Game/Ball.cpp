@@ -3,6 +3,7 @@
 Ball::Ball(Microsoft::WRL::ComPtr<ID3D11Device>& dev, Microsoft::WRL::ComPtr<ID3D11DeviceContext>& dContext)
 {
     mesh = new TriangleComponent(dev, dContext);
+    transform = new Transform();
 }
 
 void Ball::Init(float startX, float startY, float wwidth, float hheight)
@@ -12,7 +13,7 @@ void Ball::Init(float startX, float startY, float wwidth, float hheight)
     height = hheight / 2;
 
     mesh->SetLocationAndForm(startPos, wwidth, hheight, 1.0f);
-    mesh->Init();
+    mesh->Init(transform);
 
     collider.Center = { startPos.x, startPos.y, 0.0f };
     collider.Extents = { width, height, 0.0f };

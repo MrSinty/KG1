@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Support/DXInclude.h"
+#include "../Transform/Transform.h"
 
 
 class GameComponent
@@ -8,7 +9,7 @@ class GameComponent
 public:
     virtual ~GameComponent() = default;
 
-    virtual bool Init() = 0;
+    virtual bool Init(Transform* transform) = 0;
     virtual bool Draw() = 0;
     virtual void Update() = 0;
 
